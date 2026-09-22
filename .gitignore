@@ -4,6 +4,7 @@ backend/venv/
 backend/.env
 backend/models/
 backend/notes.json
+backend/server.log
 
 # Android
 android/.gradle/
