@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- glow suave detrás de la red -->
+    <path android:pathData="M54,54 m-30,0 a30,30 0 1,0 60,0 a30,30 0 1,0 -60,0"
+        android:fillColor="#33FF3B30" />
+    <path android:pathData="M54,54 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0"
+        android:fillColor="#26FFB020" />
+
+    <!-- sinapsis -->
+    <path android:pathData="M54,54 L74,54 M54,54 L64,71.3 M54,54 L44,71.3 M54,54 L34,54 M54,54 L44,36.7 M54,54 L64,36.7 M74,54 L64,71.3 M64,71.3 L44,71.3 M44,71.3 L34,54 M34,54 L44,36.7 M44,36.7 L64,36.7 M64,36.7 L74,54"
+        android:strokeColor="#59FFD9BE"
+        android:strokeWidth="1.6"
+        android:fillColor="#00000000" />
+
+    <!-- nodo central -->
+    <path android:pathData="M54,54 m-6.5,0 a6.5,6.5 0 1,0 13,0 a6.5,6.5 0 1,0 -13,0" android:fillColor="#FFFFFF" />
+
+    <!-- anillo de 6 nodos -->
+    <path android:pathData="M74,54 m-4.6,0 a4.6,4.6 0 1,0 9.2,0 a4.6,4.6 0 1,0 -9.2,0" android:fillColor="#FFB020" />
+    <path android:pathData="M64,71.3 m-4.6,0 a4.6,4.6 0 1,0 9.2,0 a4.6,4.6 0 1,0 -9.2,0" android:fillColor="#FFC24D" />
+    <path android:pathData="M44,71.3 m-4.6,0 a4.6,4.6 0 1,0 9.2,0 a4.6,4.6 0 1,0 -9.2,0" android:fillColor="#FF8F5C" />
+    <path android:pathData="M34,54 m-4.6,0 a4.6,4.6 0 1,0 9.2,0 a4.6,4.6 0 1,0 -9.2,0" android:fillColor="#FF3B30" />
+    <path android:pathData="M44,36.7 m-4.6,0 a4.6,4.6 0 1,0 9.2,0 a4.6,4.6 0 1,0 -9.2,0" android:fillColor="#FF8F5C" />
+    <path android:pathData="M64,36.7 m-4.6,0 a4.6,4.6 0 1,0 9.2,0 a4.6,4.6 0 1,0 -9.2,0" android:fillColor="#FFC24D" />
+
+</vector>

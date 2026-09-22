@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/core_bg">
+
+    <View
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="-90dp"
+        android:layout_marginTop="-90dp"
+        android:background="@drawable/glow_red" />
+
+    <View
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="-90dp"
+        android:layout_marginBottom="60dp"
+        android:background="@drawable/glow_amber" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="28dp"
+        android:paddingTop="64dp"
+        android:paddingBottom="32dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/brand_label"
+                android:textAllCaps="true"
+                android:letterSpacing="0.16"
+                android:textSize="12sp"
+                android:textColor="@color/core_text_dim" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/app_name"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.04"
+                android:textColor="@color/core_text" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/app_tagline"
+                android:textSize="13sp"
+                android:textColor="@color/core_text_dim" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:id="@+id/orbWrap"
+                android:layout_width="176dp"
+                android:layout_height="176dp"
+                android:layout_gravity="center">
+
+                <FrameLayout
+                    android:id="@+id/orbOrbit"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <View
+                        android:layout_width="7dp"
+                        android:layout_height="7dp"
+                        android:layout_gravity="top|center_horizontal"
+                        android:background="@drawable/orb_orbit_dot" />
+                </FrameLayout>
+
+                <View
+                    android:id="@+id/orbRingOuter"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/orb_ring_outer" />
+
+                <View
+                    android:id="@+id/orbRingInner"
+                    android:layout_width="152dp"
+                    android:layout_height="152dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/orb_ring_inner" />
+
+                <View
+                    android:layout_width="124dp"
+                    android:layout_height="124dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/orb_sphere_bg" />
+
+                <View
+                    android:id="@+id/orbCoreGlow"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/orb_core_glow" />
+
+                <ImageView
+                    android:id="@+id/orbNeuralNet"
+                    android:layout_width="124dp"
+                    android:layout_height="124dp"
+                    android:layout_gravity="center"
+                    android:padding="4dp"
+                    android:src="@drawable/orb_neural_net"
+                    android:contentDescription="@null" />
+
+            </FrameLayout>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="28dp"
+            android:paddingHorizontal="18dp"
+            android:paddingVertical="10dp"
+            android:background="@drawable/glass_pill_bg"
+            android:textSize="13sp"
+            android:textColor="@color/core_text_dim"
+            android:text="@string/status_missing_permissions" />
+
+        <Button
+            android:id="@+id/requestPermissionsButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/glass_button_bg"
+            android:textAllCaps="false"
+            android:textColor="@color/core_text"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:text="@string/request_permissions" />
+
+        <Button
+            android:id="@+id/startListeningButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/glass_button_primary_bg"
+            android:textAllCaps="false"
+            android:textColor="@color/core_text"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:text="@string/start_listening" />
+
+        <EditText
+            android:id="@+id/testInput"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/glass_button_bg"
+            android:paddingHorizontal="16dp"
+            android:hint="@string/test_input_hint"
+            android:textColorHint="@color/core_text_dim"
+            android:textColor="@color/core_text"
+            android:textSize="14sp"
+            android:singleLine="true"
+            android:imeOptions="actionSend"
+            android:inputType="text" />
+
+        <Button
+            android:id="@+id/showOverlayButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@android:color/transparent"
+            android:textAllCaps="false"
+            android:textColor="@color/core_text_dim"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:text="@string/show_overlay_test" />
+
+    </LinearLayout>
+
+</FrameLayout>

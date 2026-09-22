@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Core" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/core_red</item>
+        <item name="colorPrimaryDark">@color/core_bg</item>
+        <item name="colorAccent">@color/core_amber</item>
+        <item name="android:windowBackground">@color/core_bg</item>
+    </style>
+
+    <style name="Theme.Core.Overlay" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+</resources>

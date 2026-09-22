@@ -1,0 +1,15 @@
+# Python / backend
+backend/venv/
+**/__pycache__/
+backend/.env
+backend/models/
+backend/notes.json
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+android/.idea/
+android/build_output.log
+*.iml
