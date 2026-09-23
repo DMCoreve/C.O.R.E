@@ -71,5 +71,11 @@ constantes. Por eso openWakeWord corre dentro de la app Android (capa 1), y todo
    hoy en 0.5) según qué tan sensible/propenso a falsos positivos resulte en uso real.
 3. STT/TTS en streaming si la transcripción "en vivo" del overlay lo requiere de verdad.
 4. Cliente de escritorio (Windows) reutilizando este mismo `backend/`.
-5. Deploy remoto del backend (Railway/Render, como Neura) cuando el pipeline local esté
-   validado.
+
+## Backend en producción
+
+Desplegado en Render (plan Free): `https://c-o-r-e-d6g3.onrender.com`. Ver
+`backend/README.md` → "Deploy en Render" para el paso a paso (incluye el ajuste de
+`WHISPER_MODEL=base` en vez de `small`, necesario porque el plan Free solo da 512MB de
+RAM). La app Android ya apunta ahí (`BackendClient.kt`), no a una IP local — funciona
+desde cualquier red, no solo en casa.

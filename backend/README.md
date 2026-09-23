@@ -52,7 +52,9 @@ redespliega automático en cada push.
 4. Variables de entorno (panel de Render → Environment), igual que en `.env`:
    - `GEMINI_API_KEY`
    - `GEMINI_MODEL` = `gemini-2.5-flash`
-   - `WHISPER_MODEL` = `small`
+   - `WHISPER_MODEL` = `base` (**no** `small` — el plan Free de Render solo da 512MB de
+     RAM, y `small` se queda sin memoria al arrancar; `base` sí entra. Si tienes un
+     plan con más RAM, `small` transcribe mejor)
    - `PIPER_MODEL_PATH` = `./models/es_ES-davefx-medium.onnx`
 5. Deploy. La primera visita después de estar inactivo tarda 30-50s en el plan Free
    (se "duerme"), igual que Neura.

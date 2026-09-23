@@ -23,15 +23,12 @@ data class NoteResult(
     val noteId: String,
 )
 
-/**
- * Cliente del backend de C.O.R.E. ("cerebro" compartido). Cambia BASE_URL por la IP
- * local del backend (ver backend/README.md) mientras no haya deploy remoto.
- */
+/** Cliente del backend de C.O.R.E. ("cerebro" compartido), desplegado en Render. */
 object BackendClient {
 
-    // IP local de la PC donde corre backend/ (ver README del backend). Cambia si tu PC
-    // cambia de red o de IP: en Windows, `ipconfig` -> "Dirección IPv4" del adaptador LAN.
-    private const val BASE_URL = "http://192.168.1.185:8787"
+    // Backend en Render (ver backend/README.md → "Deploy en Render"). Plan Free: se
+    // "duerme" tras inactividad, la primera llamada después de un rato tarda 30-50s.
+    private const val BASE_URL = "https://c-o-r-e-d6g3.onrender.com"
 
     private val client = OkHttpClient()
 
