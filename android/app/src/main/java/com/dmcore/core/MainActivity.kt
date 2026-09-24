@@ -20,6 +20,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.dmcore.core.network.BackendClient
 import com.dmcore.core.overlay.OverlayService
 import com.dmcore.core.service.CoreForegroundService
 
@@ -59,6 +60,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.startListeningButton).setOnClickListener {
             ContextCompat.startForegroundService(this, Intent(this, CoreForegroundService::class.java))
             updateStatus()
+        }
+        findViewById<Button>(R.id.talkNowButton).setOnClickListener {
+            startService(Intent(this, OverlayService::class.java).putExtra(OverlayService.EXTRA_LISTEN, true))
         }
         val testInput = findViewById<EditText>(R.id.testInput)
         findViewById<Button>(R.id.showOverlayButton).setOnClickListener {
@@ -134,6 +138,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateStatus()
+        // Si Render estaba dormido, empieza a despertarlo antes de que hagas la prueba.
+        BackendClient.warmUp()
     }
 
     private fun requestRuntimePermissions() {

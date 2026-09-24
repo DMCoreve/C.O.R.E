@@ -1,7 +1,7 @@
 # C.O.R.E.
 
 Central Operating & Response Engine — asistente personal estilo Jarvis para DMCore.
-Wake word "C.O.R.E.", overlay flotante en Android, pipeline de STT + LLM + TTS.
+Wake word "Jupiter" (el asistente sigue llamándose C.O.R.E.), isla flotante en Android, voz on-device (SpeechRecognizer + TextToSpeech) y Gemini en el backend.
 
 - Especificación original: [`docs/especificacion.md`](docs/especificacion.md)
 - Diseño y decisiones de arquitectura: [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md)
@@ -13,4 +13,4 @@ Wake word "C.O.R.E.", overlay flotante en Android, pipeline de STT + LLM + TTS.
 
 Backend instalado y verificado end-to-end (solo falta pegar una `GEMINI_API_KEY` real en
 `backend/.env`). App Android con permisos, foreground service y overlay de prueba armados,
-todavía sin el modelo de wake word "core" entrenado (ver `docs/ENTRENAR_WAKE_WORD.md`).
+con wake word "Jupiter" (pronunciado en inglés), modelo de la comunidad de openWakeWord.

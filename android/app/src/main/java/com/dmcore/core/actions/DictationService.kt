@@ -62,6 +62,7 @@ class DictationService : Service() {
             start()
         }
         recorder = mediaRecorder
+        isRecording = true
 
         showOverlayMessage("Grabando nota… toca \"Detener\" en la notificación cuando termines.")
         mainHandler.postDelayed(maxDurationRunnable, MAX_DURATION_MS)
@@ -73,6 +74,7 @@ class DictationService : Service() {
         val file = outputFile
         val activeRecorder = recorder
         recorder = null
+        isRecording = false
         outputFile = null
 
         if (activeRecorder == null || file == null) {
@@ -148,6 +150,7 @@ class DictationService : Service() {
             it.release()
         }
         recorder = null
+        isRecording = false
         super.onDestroy()
     }
 
@@ -156,5 +159,9 @@ class DictationService : Service() {
         private const val CHANNEL_ID = "core_dictation"
         private const val NOTIFICATION_ID = 2
         private const val MAX_DURATION_MS = 5 * 60 * 1000L
+
+        /** CoreForegroundService no escucha el wake word mientras se graba una nota. */
+        @Volatile var isRecording = false
+            private set
     }
 }

@@ -11,14 +11,15 @@ import java.util.ArrayDeque
  * Reimplementación en Kotlin del pipeline de streaming de openWakeWord
  * (openwakeword/utils.py → AudioFeatures), validado contra el original en Python
  * antes de escribirse aquí. Tres modelos encadenados:
- *   audio crudo -> melspectrograma -> embeddings -> clasificador ("hey jarvis")
+ *   audio crudo -> melspectrograma -> embeddings -> clasificador ("Jupiter")
  */
 class WakeWordDetector(context: Context) {
 
     private val env = OrtEnvironment.getEnvironment()
     private val melSession = loadSession(context, "melspectrogram.onnx")
     private val embSession = loadSession(context, "embedding_model.onnx")
-    private val clfSession = loadSession(context, "hey_jarvis_v0.1.onnx")
+    private val clfSession = loadSession(context, WAKE_MODEL_ASSET)
+    private val clfInputName = clfSession.inputNames.first()
 
     // Ventana deslizante de audio crudo: el chunk nuevo + 480 muestras de contexto
     // previo (igual que el streaming real de openWakeWord), para que el modelo de
@@ -35,7 +36,7 @@ class WakeWordDetector(context: Context) {
 
     /**
      * Procesa exactamente [CHUNK_SAMPLES] muestras (80ms a 16kHz) y devuelve el
-     * score de "hey jarvis" (0.0–1.0), o null si todavía no hay suficiente
+     * score de "Jupiter" (0.0–1.0), o null si todavía no hay suficiente
      * contexto acumulado para calcular uno (los primeros ~1.3s de audio).
      */
     fun processChunk(chunk: ShortArray): Float? {
@@ -92,10 +93,21 @@ class WakeWordDetector(context: Context) {
             System.arraycopy(featureWindow[i], 0, flat, i * 96, 96)
         }
         OnnxTensor.createTensor(env, FloatBuffer.wrap(flat), longArrayOf(1, CLASSIFIER_WINDOW_FRAMES.toLong(), 96)).use { input ->
-            clfSession.run(mapOf("x.1" to input)).use { result ->
+            clfSession.run(mapOf(clfInputName to input)).use { result ->
                 return (result[0] as OnnxTensor).floatBuffer.get(0)
             }
         }
+    }
+
+    /**
+     * Borra el audio acumulado. Se llama al reanudar tras una interacción: si no, los
+     * buffers todavía contienen el "Jupiter" anterior y el detector se volvería a
+     * disparar apenas vuelve a escuchar.
+     */
+    fun reset() {
+        rawWindow.fill(0f)
+        melBuffer.clear()
+        featureBuffer.clear()
     }
 
     fun close() {
@@ -107,6 +119,10 @@ class WakeWordDetector(context: Context) {
     companion object {
         const val SAMPLE_RATE = 16000
         const val CHUNK_SAMPLES = 1280 // 80ms
+
+        // Modelo de la comunidad (fwartner/home-assistant-wakewords-collection, en/jupiter).
+        // Entrenado con pronunciación en inglés: responde a "YÚ-pi-ter", no a "JÚ-pi-ter".
+        private const val WAKE_MODEL_ASSET = "jupiter.onnx"
 
         private const val CONTEXT_SAMPLES = 480
         private const val RAW_WINDOW_SAMPLES = CHUNK_SAMPLES + CONTEXT_SAMPLES

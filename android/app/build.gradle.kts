@@ -47,4 +47,6 @@ dependencies {
     // docs/ENTRENAR_WAKE_WORD.md — la integración real en CoreForegroundService.kt
     // se escribe cuando exista el modelo .onnx entrenado.
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.19.2")
+
+    testImplementation("junit:junit:4.13.2")
 }

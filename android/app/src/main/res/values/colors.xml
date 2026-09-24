@@ -3,6 +3,7 @@
     <color name="core_bg">#0A0908</color>
     <color name="core_red">#FF3B30</color>
     <color name="core_amber">#FFB020</color>
+    <color name="core_orange">#FF6A2B</color>
     <color name="core_text">#F6F3EF</color>
     <color name="core_text_dim">#9C9590</color>
     <color name="core_glass_fill">#12FFFFFF</color>
