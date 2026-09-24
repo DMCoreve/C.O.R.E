@@ -1,9 +1,11 @@
 from dataclasses import dataclass
+import logging
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
 import config
 
@@ -83,6 +85,59 @@ def _confirmation_text(name: str, args: dict) -> str:
     return "Hecho."
 
 
+log = logging.getLogger("core.llm")
+
+# Modelo que dio 429/503 -> momento (monotonic) hasta el que no se vuelve a probar.
+_cooldown_until: dict[str, float] = {}
+_COOLDOWN_S = 10 * 60
+
+
+def _model_chain() -> list[str]:
+    """GEMINI_MODEL primero y después los de respaldo, sin repetir."""
+    models = [config.GEMINI_MODEL, *config.GEMINI_FALLBACK_MODELS]
+    return list(dict.fromkeys(m for m in models if m))
+
+
+def _thinking_config(model: str) -> dict:
+    # Respuestas cortas habladas: pensar solo suma segundos. 2.5 lo apaga con
+    # thinking_budget=0; la serie 3 lo baja con thinking_level.
+    if model.startswith("gemini-2.5"):
+        return {"thinking_budget": 0}
+    return {"thinking_level": "minimal"}
+
+
+def _generate(contents: list, system: str):
+    """
+    Prueba los modelos en orden. En el plan gratis cada modelo tiene su propia cuota
+    diaria: si uno responde 429 (cuota) o 503 (saturado) se salta por 10 min y se usa
+    el siguiente, en vez de dejar a C.O.R.E. mudo el resto del día.
+    """
+    now = time.monotonic()
+    chain = _model_chain()
+    available = [m for m in chain if _cooldown_until.get(m, 0) <= now] or chain
+    last_error: Exception | None = None
+
+    for model in available:
+        cfg = {"system_instruction": system, "tools": _TOOLS, "thinking_config": _thinking_config(model)}
+        try:
+            try:
+                return _client.models.generate_content(model=model, contents=contents, config=cfg)
+            except errors.ClientError as e:
+                if e.code != 400 or "thinking" not in str(e).lower():
+                    raise
+                # Algún modelo no acepta ese nivel de thinking: reintentar sin configurarlo.
+                cfg.pop("thinking_config")
+                return _client.models.generate_content(model=model, contents=contents, config=cfg)
+        except errors.APIError as e:
+            if e.code not in (429, 503, 404):
+                raise
+            log.warning("Gemini %s respondió %s; probando el siguiente modelo", model, e.code)
+            _cooldown_until[model] = time.monotonic() + _COOLDOWN_S
+            last_error = e
+
+    raise last_error  # todos agotados: app.py lo convierte en 429/502
+
+
 def _now_in(tz_name: str | None) -> datetime:
     try:
         return datetime.now(ZoneInfo(tz_name or config.DEFAULT_TIMEZONE))
@@ -107,17 +162,7 @@ def ask(
     now = _now_in(tz_name).replace(tzinfo=None).isoformat(timespec="seconds")
     system = f"{SYSTEM_PROMPT}\n\nFecha y hora actual: {now}."
 
-    response = _client.models.generate_content(
-        model=config.GEMINI_MODEL,
-        contents=contents,
-        config={
-            "system_instruction": system,
-            "tools": _TOOLS,
-            # Sin "pensar": para respuestas cortas habladas el razonamiento extra de
-            # 2.5 Flash solo suma segundos de espera.
-            "thinking_config": {"thinking_budget": 0},
-        },
-    )
+    response = _generate(contents, system)
 
     # Sin candidates o sin content cuando Gemini bloquea la respuesta (filtros de seguridad).
     content = response.candidates[0].content if response.candidates else None

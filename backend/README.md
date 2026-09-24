@@ -53,7 +53,11 @@ redespliega automático en cada push.
 3. **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 4. Variables de entorno (panel de Render → Environment), igual que en `.env`:
    - `GEMINI_API_KEY`
-   - `GEMINI_MODEL` = `gemini-2.5-flash`
+   - `GEMINI_MODEL` = `gemini-3.5-flash` (el principal; si no se pone, ese es el valor por defecto)
+   - `GEMINI_FALLBACK_MODELS` (opcional): lista separada por comas de modelos de respaldo.
+     En el plan gratis cada modelo tiene su propia cuota **diaria**; si el principal responde
+     429 (cuota) o 503 (saturado), `llm.py` usa el siguiente y salta el agotado por 10 min.
+     Por defecto: `gemini-3.5-flash,gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-2.5-flash`.
    - `WHISPER_MODEL` = `base` (**no** `small` — el plan Free de Render solo da 512MB de
      RAM, y `small` se queda sin memoria al arrancar; `base` sí entra. Si tienes un
      plan con más RAM, `small` transcribe mejor)
