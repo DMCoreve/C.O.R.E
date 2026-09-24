@@ -75,7 +75,10 @@ async def interact(
         t_tts = time.monotonic()
     except Exception as e:
         log.exception("interact falló")
-        raise HTTPException(status_code=502, detail=f"{type(e).__name__}: {e}"[:300])
+        # 429 = cuota por minuto de Gemini (plan gratis); la app lo muestra distinto
+        # de un error de red porque basta con esperar unos segundos.
+        status = 429 if getattr(e, "code", None) == 429 else 502
+        raise HTTPException(status_code=status, detail=f"{type(e).__name__}: {e}"[:300])
 
     log.info(
         "interact stt=%.1fs llm=%.1fs tts=%.1fs total=%.1fs",

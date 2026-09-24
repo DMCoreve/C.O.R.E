@@ -1,7 +1,9 @@
 # C.O.R.E. backend
 
-El "cerebro" de C.O.R.E.: recibe audio o texto, transcribe (STT), razona (LLM) y
-sintetiza la respuesta en voz (TTS). Pensado para ser consumido por el cliente Android
+El "cerebro" de C.O.R.E.: recibe texto (o audio), razona con Gemini y devuelve la
+respuesta y la acción a ejecutar. La app Android transcribe y habla on-device y manda
+`speak=false`, así que en el uso normal solo corre Gemini (~1 s); Whisper (STT) y Piper
+(TTS) se cargan solo si un cliente manda audio o pide la voz, y para `/note`. Pensado para ser consumido por el cliente Android
 y, más adelante, por un cliente de escritorio.
 
 ## Arrancar en local
@@ -30,9 +32,9 @@ curl -X POST http://127.0.0.1:8787/interact -F "text=Hola C.O.R.E., ¿qué tal?"
 | Archivo | Qué hace |
 |---|---|
 | `app.py` | FastAPI: `/health` y `/interact` (arma el pipeline STT → LLM → TTS) |
-| `stt.py` | Transcripción con Whisper local (`faster-whisper`) |
+| `stt.py` | Transcripción con Whisper local (`faster-whisper`), cargado al primer uso |
 | `llm.py` | Razonamiento con Gemini; identidad de C.O.R.E. en el system prompt |
-| `tts.py` | Síntesis de voz con Piper (local) |
+| `tts.py` | Síntesis de voz con Piper (local), cargado al primer uso |
 | `config.py` | Carga de variables de entorno |
 
 Cada uno es reemplazable sin tocar los demás (p.ej. cambiar Gemini por Claude en
@@ -56,6 +58,9 @@ redespliega automático en cada push.
      RAM, y `small` se queda sin memoria al arrancar; `base` sí entra. Si tienes un
      plan con más RAM, `small` transcribe mejor)
    - `PIPER_MODEL_PATH` = `./models/es_ES-davefx-medium.onnx`
+   - `DEFAULT_TIMEZONE` (opcional, por defecto `America/Caracas`): zona horaria que se usa si
+     el cliente no manda `tz`. El servidor corre en UTC; sin esto "qué hora es" y los
+     recordatorios salen corridos.
 5. Deploy. La primera visita después de estar inactivo tarda 30-50s en el plan Free
    (se "duerme"), igual que Neura.
 
