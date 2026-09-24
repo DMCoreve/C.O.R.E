@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from google import genai
 from google.genai import types
@@ -82,7 +83,18 @@ def _confirmation_text(name: str, args: dict) -> str:
     return "Hecho."
 
 
-def ask(transcript: str, history: list[dict[str, str]] | None = None) -> AskResult:
+def _now_in(tz_name: str | None) -> datetime:
+    try:
+        return datetime.now(ZoneInfo(tz_name or config.DEFAULT_TIMEZONE))
+    except (ZoneInfoNotFoundError, ValueError):
+        return datetime.now(ZoneInfo(config.DEFAULT_TIMEZONE))
+
+
+def ask(
+    transcript: str,
+    history: list[dict[str, str]] | None = None,
+    tz_name: str | None = None,
+) -> AskResult:
     history = history or []
     contents = [
         {"role": "user" if turn["role"] == "user" else "model", "parts": [{"text": turn["text"]}]}
@@ -90,19 +102,31 @@ def ask(transcript: str, history: list[dict[str, str]] | None = None) -> AskResu
     ]
     contents.append({"role": "user", "parts": [{"text": transcript}]})
 
-    now = datetime.now().isoformat(timespec="seconds")
+    # Hora local del usuario, sin offset: when_iso tiene que salir en hora local porque
+    # el teléfono la interpreta en su propia zona (ActionExecutor.scheduleReminder).
+    now = _now_in(tz_name).replace(tzinfo=None).isoformat(timespec="seconds")
     system = f"{SYSTEM_PROMPT}\n\nFecha y hora actual: {now}."
 
     response = _client.models.generate_content(
         model=config.GEMINI_MODEL,
         contents=contents,
-        config={"system_instruction": system, "tools": _TOOLS},
+        config={
+            "system_instruction": system,
+            "tools": _TOOLS,
+            # Sin "pensar": para respuestas cortas habladas el razonamiento extra de
+            # 2.5 Flash solo suma segundos de espera.
+            "thinking_config": {"thinking_budget": 0},
+        },
     )
 
-    part = response.candidates[0].content.parts[0]
-    if part.function_call:
-        name = part.function_call.name
-        args = dict(part.function_call.args)
-        return AskResult(text=_confirmation_text(name, args), action={"name": name, "args": args})
+    # Sin candidates o sin content cuando Gemini bloquea la respuesta (filtros de seguridad).
+    content = response.candidates[0].content if response.candidates else None
+    parts = (content.parts if content else None) or []
+    for part in parts:
+        if part.function_call:
+            name = part.function_call.name
+            args = dict(part.function_call.args or {})
+            return AskResult(text=_confirmation_text(name, args), action={"name": name, "args": args})
 
-    return AskResult(text=response.text, action=None)
+    text = "".join(p.text for p in parts if p.text).strip()
+    return AskResult(text=text or "No te entendí bien, ¿me lo repites?", action=None)
