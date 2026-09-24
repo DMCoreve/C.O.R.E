@@ -22,7 +22,7 @@
     <string name="overlay_error_mic">El micrófono está ocupado por otra app.</string>
     <string name="overlay_error_recognizer">El reconocimiento de voz no está disponible en este teléfono.</string>
     <string name="overlay_waking_server">Está tardando más de lo normal, dame unos segundos…</string>
-    <string name="overlay_error_quota">Gemini recibió demasiadas preguntas seguidas. Espera un minuto y vuelve a intentar.</string>
+    <string name="overlay_error_quota">Gemini llegó a su límite de uso gratis por ahora. Vuelve a intentar más tarde.</string>
     <string name="overlay_listening_hint">Te escucho…</string>
     <string name="notification_channel_name">C.O.R.E. activo</string>
     <string name="reminder_channel_name">Recordatorios de C.O.R.E.</string>

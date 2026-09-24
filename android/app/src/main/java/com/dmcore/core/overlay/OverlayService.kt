@@ -68,6 +68,14 @@ class OverlayService : Service() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val dismissRunnable = Runnable { dismiss() }
 
+    // Si el reconocedor nunca contesta (ni resultado ni error), avisar en vez de cerrarse mudo.
+    private val listenTimeout = Runnable {
+        if (!recognitionHandled) {
+            recognitionHandled = true
+            showError(getString(R.string.overlay_error_no_speech))
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -257,7 +265,8 @@ class OverlayService : Service() {
         }
         languageAttempt = 0
         launchRecognizer()
-        scheduleDismiss(LISTEN_TIMEOUT_MS)
+        mainHandler.removeCallbacks(dismissRunnable)
+        mainHandler.postDelayed(listenTimeout, LISTEN_TIMEOUT_MS)
     }
 
     private fun launchRecognizer() {
@@ -326,6 +335,7 @@ class OverlayService : Service() {
                 languageAttempt++
                 stopRecognizer()
                 launchRecognizer()
+                mainHandler.postDelayed(listenTimeout, LISTEN_TIMEOUT_MS)
                 return
             }
             recognitionHandled = true
@@ -354,6 +364,7 @@ class OverlayService : Service() {
         bundle?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
 
     private fun stopRecognizer() {
+        mainHandler.removeCallbacks(listenTimeout)
         recognizer?.let {
             it.cancel()
             it.destroy()
@@ -383,6 +394,7 @@ class OverlayService : Service() {
         BackendClient.interactWithText(text) { result ->
             mainHandler.post {
                 if (seq != requestSeq || dismissing) return@post
+                requestSeq++ // invalida el aviso de "está tardando" (éxito o error)
                 Log.i(TAG, "Respuesta en ${SystemClock.elapsedRealtime() - startedAt}ms")
                 result.onSuccess { handleResponse(it) }
                 result.onFailure { error ->
@@ -394,7 +406,6 @@ class OverlayService : Service() {
     }
 
     private fun handleResponse(response: InteractResult) {
-        requestSeq++ // invalida el aviso de "despertando el servidor"
         setState(State.SPEAKING)
         setTranscript(response.responseText)
         try {
