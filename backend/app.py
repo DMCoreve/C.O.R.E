@@ -44,6 +44,16 @@ async def _transcribe_upload(audio: UploadFile) -> str:
         os.unlink(tmp.name)
 
 
+def _quota_detail(e: Exception) -> str:
+    """Qué cuota de Gemini se agotó (por minuto o por día) y en cuánto reintentar."""
+    quotas, retry = [], None
+    for item in ((getattr(e, "details", None) or {}).get("error", {}).get("details", [])):
+        for violation in item.get("violations", []):
+            quotas.append(violation.get("quotaId", "?"))
+        retry = item.get("retryDelay", retry)
+    return f"Cuota de Gemini agotada: {', '.join(quotas) or 'desconocida'}; reintentar en {retry or '?'}"
+
+
 @app.get("/health")
 def health():
     return {"estado": "ok"}
@@ -77,8 +87,9 @@ async def interact(
         log.exception("interact falló")
         # 429 = cuota por minuto de Gemini (plan gratis); la app lo muestra distinto
         # de un error de red porque basta con esperar unos segundos.
-        status = 429 if getattr(e, "code", None) == 429 else 502
-        raise HTTPException(status_code=status, detail=f"{type(e).__name__}: {e}"[:300])
+        if getattr(e, "code", None) == 429:
+            raise HTTPException(status_code=429, detail=_quota_detail(e))
+        raise HTTPException(status_code=502, detail=f"{type(e).__name__}: {e}"[:300])
 
     log.info(
         "interact stt=%.1fs llm=%.1fs tts=%.1fs total=%.1fs",
