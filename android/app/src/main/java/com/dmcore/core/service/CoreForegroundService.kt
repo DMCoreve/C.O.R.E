@@ -44,6 +44,10 @@ class CoreForegroundService : Service() {
     @Volatile private var pausedAt = 0L
     @Volatile private var pauseRequested = false
 
+    // El diagnóstico acumula el máximo de cada ~2 s; tras una pausa arrastraría el score de la
+    // activación anterior y parecería otra detección.
+    private var diagResetRequested = false
+
     private val keepAwake = object : Runnable {
         override fun run() {
             BackendClient.warmUp()
@@ -151,6 +155,12 @@ class CoreForegroundService : Service() {
             }
             if (record.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
                 detector.reset()
+                if (diagResetRequested) {
+                    diagChunks = 0
+                    diagMaxScore = 0f
+                    diagMaxRms = 0.0
+                    diagResetRequested = false
+                }
                 record.startRecording()
                 Log.i(TAG, "Escucha reanudada")
             }
@@ -187,6 +197,7 @@ class CoreForegroundService : Service() {
     /** Suelta el micrófono para que SpeechRecognizer lo pueda usar. Solo desde el hilo de escucha. */
     private fun pauseMic(record: AudioRecord) {
         if (record.recordingState == AudioRecord.RECORDSTATE_RECORDING) record.stop()
+        diagResetRequested = true
         pausedAt = SystemClock.elapsedRealtime()
         paused = true
     }
@@ -244,7 +255,10 @@ class CoreForegroundService : Service() {
         private const val TAG = "CoreForegroundService"
         private const val CHANNEL_ID = "core_listening"
         private const val NOTIFICATION_ID = 1
-        private const val WAKE_THRESHOLD = 0.5f
+        // 0.3 y no 0.5: con la voz real de Diego el modelo "Jupiter" solo pasaba 0.5 hablando
+        // fuerte y claro (prueba del 2026-09-30); 0.3 lo hace usable sin falsos disparos
+        // observados. Si empieza a activarse solo, subir de a 0.05.
+        private const val WAKE_THRESHOLD = 0.3f
         private const val DIAG_EVERY_CHUNKS = 25 // ~2s
         private const val MAX_PAUSE_MS = 90_000L
 

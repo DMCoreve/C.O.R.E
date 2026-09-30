@@ -6,3 +6,5 @@ google-genai
 faster-whisper
 piper-tts
 tzdata
+# Búsqueda web sin clave (DuckDuckGo); fijada porque depende de scraping y cambia seguido.
+ddgs==9.16.0
