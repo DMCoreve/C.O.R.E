@@ -44,38 +44,66 @@ _WEATHER_CODES = {
 
 
 def weather_text(city: str | None, day: str | None) -> str:
-    """Respuesta hablada del clima. day: 'hoy' (por defecto) o 'mañana'."""
+    """Respuesta hablada del clima. day: 'hoy' (por defecto) o 'mañana'.
+
+    Open-Meteo primero; si rechaza la consulta (desde la IP compartida de Render llegó a
+    responder sin 'daily'), wttr.in como respaldo. Ambos son gratis y sin clave.
+    """
     city = (city or "").strip() or config.DEFAULT_CITY
+    tomorrow = (day or "").lower().startswith("ma")  # "mañana"
     try:
-        geo = _HTTP.get(
-            "https://geocoding-api.open-meteo.com/v1/search",
-            params={"name": city, "count": 1, "language": "es"},
-        ).json()
-        if not geo.get("results"):
-            return f"No encontré la ciudad {city}."
-        place = geo["results"][0]
-        data = _HTTP.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": place["latitude"],
-                "longitude": place["longitude"],
-                "current": "temperature_2m,apparent_temperature,weather_code",
-                "daily": "temperature_2m_max,temperature_2m_min,"
-                "precipitation_probability_max,weather_code",
-                "timezone": "auto",
-                "forecast_days": 2,
-            },
-        ).json()
-    except (httpx.HTTPError, ValueError, KeyError) as e:
-        log.warning("clima falló: %s", e)
+        return _open_meteo(city, tomorrow)
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as e:
+        log.warning("Open-Meteo falló (%s); probando wttr.in", e)
+    try:
+        return _wttr(city, tomorrow)
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as e:
+        log.warning("wttr.in falló: %s", e)
         return "No pude consultar el clima ahora mismo."
+
+
+def _wttr(city: str, tomorrow: bool) -> str:
+    data = _HTTP.get(f"https://wttr.in/{city}", params={"format": "j1", "lang": "es"}).json()
+    i, when = (1, "Mañana") if tomorrow else (0, "Hoy")
+    forecast = data["weather"][i]
+    sky = forecast["hourly"][4]["lang_es"][0]["value"].lower()  # mediodía
+    rain = max(int(h["chanceofrain"]) for h in forecast["hourly"])
+    text = f"{when} en {city} habrá {sky}, entre {forecast['mintempC']} y {forecast['maxtempC']} grados"
+    if rain >= 20:
+        text += f", con {rain}% de probabilidad de lluvia"
+    if not tomorrow:
+        text += f". Ahora mismo hace {data['current_condition'][0]['temp_C']} grados"
+    return text + "."
+
+
+def _open_meteo(city: str, tomorrow: bool) -> str:
+    """Lanza KeyError/ValueError si Open-Meteo responde con error; lo atrapa weather_text."""
+    geo = _HTTP.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": city, "count": 1, "language": "es"},
+    ).json()
+    if not geo.get("results"):
+        return f"No encontré la ciudad {city}."
+    place = geo["results"][0]
+    data = _HTTP.get(
+        "https://api.open-meteo.com/v1/forecast",
+        params={
+            "latitude": place["latitude"],
+            "longitude": place["longitude"],
+            "current": "temperature_2m,apparent_temperature,weather_code",
+            "daily": "temperature_2m_max,temperature_2m_min,"
+            "precipitation_probability_max,weather_code",
+            "timezone": "auto",
+            "forecast_days": 2,
+        },
+    ).json()
+    if "daily" not in data:
+        # Open-Meteo responde {"error": true, "reason": "..."} al limitar o rechazar.
+        raise ValueError(f"Open-Meteo sin datos: {data.get('reason', data)}")
 
     name = place["name"]
     daily = data["daily"]
-    if (day or "").lower().startswith("ma"):  # mañana
-        i, when = 1, "Mañana"
-    else:
-        i, when = 0, "Hoy"
+    i, when = (1, "Mañana") if tomorrow else (0, "Hoy")
     sky = _WEATHER_CODES.get(daily["weather_code"][i], "variable")
     rain = daily["precipitation_probability_max"][i]
     text = (
